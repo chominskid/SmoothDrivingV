@@ -237,159 +237,74 @@ namespace SmoothDrivingV
             return 0;
         }
 
-        public class CodeRemover //™
+        public class MemoryPatcher
         {
-            public string name;
-            public int initialization; //-1: Error, 0: Uninitialized, 1: Initialized
-            public bool applied;
-            public ulong memoryAddress;
-            public ulong length;
-            private byte[] prevInstruction;
-            private bool log;
+            public string Name { get; set; }
+            public int Status { get; set; } //-1: Error, 1: Standby, 2: Active
+            public ulong Address { get; set; }
+            public ulong Length { get; set; }
+            public byte[] Code { get; set; }
 
-            public CodeRemover(string name, string pattern, ulong length, string mask = "", bool log = true)
+            public MemoryPatcher(string name, string pattern, string code, string mask = "")
             {
-                this.name = name;
-                this.length = length;
-                initialization = 0;
-                applied = false;
-                this.log = log;
+                Name = name;
+                Length = (ulong)code.Length;
+                Code = code.Select(x => (byte)x).ToArray();
+                Status = 0;
+                Address = FindPattern(pattern, mask);
 
-                memoryAddress = FindPattern(pattern, mask);
-
-                if (memoryAddress == 0)
-                {
-                    initialization = -1;
-                    Logger.WriteToLog("Assembly code remover '" + name + "' initialization failed!");
-                }
+                if (Address == 0) { Status = -1; Logger.WriteToLog("Memory patcher '" + name + "' initialization failed!"); }
                 else
                 {
-                    initialization = 1;
-                    Logger.WriteToLog("Assembly code remover '" + name + "' initialized successfully (address GTA5.exe + " + Convert.ToString((long)(memoryAddress - baseAddress), 16).ToUpperInvariant() + " with " + length + " bytes).");
+                    Status = 1;
+                    Logger.WriteToLog("Memory patcher '" + name + "' initialized successfully (address GTA5.exe + " + Convert.ToString((long)(Address - baseAddress), 16).ToUpperInvariant() + " with " + Length + " bytes).");
                 }
             }
 
             public void Apply()
             {
-                if (initialization == 1 && !applied)
+                if (Status == 1)
                 {
                     try
                     {
-                        prevInstruction = new byte[length];
+                        byte[] temp = Code.Select(x => x).ToArray();
 
-                        for (ulong i = 0; i < length; i++)
+                        for (ulong i = 0; i < Length; i++)
                         {
-                            prevInstruction[i] = *(byte*)(i + memoryAddress);
-                            *(byte*)(i + memoryAddress) = 0x90;
+                            temp[i] = *(byte*)(i + Address);
+                            *(byte*)(i + Address) = Code[i];
                         }
 
-                        applied = true;
-                        if (log) Logger.WriteToLog("Assembly code remover '" + name + "' applied successfully.");
+                        Code = temp;
+                        Status = 2;
                     }
                     catch (Exception exception)
                     {
-                        Logger.WriteToLog("Assembly code remover '" + name + "' application failed! Error: " + exception.Message);
+                        Logger.WriteToLog("Memory patcher '" + Name + "' application failed! Error: " + exception.Message);
                     }
                 }
             }
 
             public void Revert()
             {
-                if (initialization == 1 && applied)
+                if (Status == 2)
                 {
                     try
                     {
-                        for (ulong i = 0; i < length; i++)
+                        byte[] temp = Code.Select(x => x).ToArray();
+
+                        for (ulong i = 0; i < Length; i++)
                         {
-                            *(byte*)(i + memoryAddress) = prevInstruction[i];
+                            temp[i] = *(byte*)(i + Address);
+                            *(byte*)(i + Address) = Code[i];
                         }
 
-                        applied = false;
-                        if (log) Logger.WriteToLog("Assembly code remover '" + name + "' reverted successfully.");
+                        Code = temp;
+                        Status = 1;
                     }
                     catch (Exception exception)
                     {
-                        Logger.WriteToLog("Assembly code remover '" + name + "' reversal failed! Error: " + exception.Message);
-                    }
-                }
-            }
-        }
-
-        public class CodeReplacer //™
-        {
-            public string name;
-            public int initialization; //-1: Error, 0: Uninitialized, 1: Initialized
-            public bool applied;
-            public ulong memoryAddress;
-            public ulong length;
-            private byte[] code;
-            private byte[] prevInstruction;
-            private bool log;
-
-            public CodeReplacer(string name, string pattern, string code, ulong length, string mask = "", bool log = true)
-            {
-                this.name = name;
-                this.length = length;
-                this.code = code.Select(x => (byte)x).ToArray();
-                initialization = 0;
-                applied = false;
-                this.log = log;
-
-                memoryAddress = FindPattern(pattern, mask);
-
-                if (memoryAddress == 0 || (ulong)code.Length != length)
-                {
-                    initialization = -1;
-                    Logger.WriteToLog("Assembly code replacer '" + name + "' initialization failed!");
-                }
-                else
-                {
-                    initialization = 1;
-                    Logger.WriteToLog("Assembly code replacer '" + name + "' initialized successfully (address GTA5.exe + " + Convert.ToString((long)(memoryAddress - baseAddress), 16).ToUpperInvariant() + " with " + length + " bytes).");
-                }
-            }
-
-            public void Apply()
-            {
-                if (initialization == 1 && !applied)
-                {
-                    try
-                    {
-                        prevInstruction = new byte[length];
-
-                        for (ulong i = 0; i < length; i++)
-                        {
-                            prevInstruction[i] = *(byte*)(i + memoryAddress);
-                            *(byte*)(i + memoryAddress) = code[i];
-                        }
-
-                        applied = true;
-                        if (log) Logger.WriteToLog("Assembly code replacer '" + name + "' applied successfully.");
-                    }
-                    catch (Exception exception)
-                    {
-                        Logger.WriteToLog("Assembly code replacer '" + name + "' application failed! Error: " + exception.Message);
-                    }
-                }
-            }
-
-            public void Revert()
-            {
-                if (initialization == 1 && applied)
-                {
-                    try
-                    {
-                        for (ulong i = 0; i < length; i++)
-                        {
-                            *(byte*)(i + memoryAddress) = prevInstruction[i];
-                        }
-
-                        applied = false;
-                        if (log) Logger.WriteToLog("Assembly code replacer '" + name + "' reverted successfully.");
-                    }
-                    catch (Exception exception)
-                    {
-                        Logger.WriteToLog("Assembly code replacer '" + name + "' reversal failed! Error: " + exception.Message);
+                        Logger.WriteToLog("Memory patcher '" + Name + "' revert failed! Error: " + exception.Message);
                     }
                 }
             }

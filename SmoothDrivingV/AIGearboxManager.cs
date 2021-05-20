@@ -24,7 +24,7 @@ namespace SmoothDrivingV
 
         public void AIGearboxTick(object sender, EventArgs eventArgs)
         {
-            if (Main.enableAdvancedGearbox)
+            if (Main.inVehicleLastFrame && Main.enableAdvancedGearbox)
             {
                 Yield();
                 Vehicle[] vehicles = World.GetAllVehicles();

@@ -50,45 +50,34 @@ namespace SmoothDrivingV
 
             Memory.Initialize();
 
-            codeRemovers = new[]
+            runtimePatchers.AddRange(new Memory.MemoryPatcher[]
             {
-                new Memory.CodeRemover("Throttle 1", "\xF3\x0F\x11\xB3\xBC\x09\x00\x00\x89\xAB\xC0\x09\x00\x00\x8B\x83\xE8\x0B\x00\x00\x83\xE8\x06\x41\x3B\xC6", 8, "xxxx????xx????xx????xxxxxx"), //During normal driving
-                new Memory.CodeRemover("Throttle 2", "\x89\xAB\xBC\x09\x00\x00\xE9\xE7\xFE\xFF\xFF\x48\x8B\xC4", 6, "xx????x????xxx"), //During braking
-                new Memory.CodeRemover("Throttle 3", "\xF3\x44\x0F\x11\x8B\xBC\x09\x00\x00\xF3\x44\x0F\x11\x93\xC0\x09\x00\x00\xE9\x53\xFF\xFF\xFF\x41\x0F\x2F\xF8", 9, "xxxxx????xxxxx????x????xxxx"), //During burnout
+                new Memory.MemoryPatcher("Steering Center", "\x44\x89\xBB\xB4\x09\x00\x00\x8B\x0D\xC6\xF8\xE6\x00\x0F\x57\xC0\x81\xF9\xFF\xFF\x00\x00\x74\x60", "\x90\x90\x90\x90\x90\x90\x90", "xxx????xx????xxxxx????x?"),
+                new Memory.MemoryPatcher("Fuel", "\x0F\x83\xBD\x00\x00\x00\x44\x0F\x2F\xA1\x00\x09\x00\x00\xF3\x44\x0F\x5C\xD0", "\xE9\xBE\x00\x00\x00\x90", "xxxxxxxxxx????xxxxx"), //Stops the car from jerking backwards and sparking at low fuel
+            });
+
+            steeringPatchers.AddRange(new Memory.MemoryPatcher[]
+            {
+                new Memory.MemoryPatcher("Steering Part 1", "\xF3\x0F\x11\x8B\xAC\x09\x00\x00\xF3\x0F\x10\x83\xB0\x09\x00\x00\xF3\x0F\x58\x83\xAC\x09\x00\x00", "\x90\x90\x90\x90\x90\x90\x90\x90", "xxxx????xxxx????xxxx????"), //Simultaneous
+                new Memory.MemoryPatcher("Steering Part 2", "\xF3\x0F\x11\x83\xAC\x09\x00\x00\x73\x06\x45\x0F\x28\xC4\xEB\x13\xF3\x44\x0F\x10\x05\x50\xE5", "\x90\x90\x90\x90\x90\x90\x90\x90", "xxxx????x?xxxxx?xxxxx??"), //Simultaneous
+                new Memory.MemoryPatcher("Steering Part 3", "\xF3\x44\x0F\x11\x83\xAC\x09\x00\x00\x4C\x8B\xCB\x45\x8A\xC6\x48\x8B\xD5\x49\x8B\xCF\xF3\x44", "\x90\x90\x90\x90\x90\x90\x90\x90\x90", "xxxxx????xxxxxxxxxxxxxx"), //Simultaneous
+            
+                new Memory.MemoryPatcher("Motorcycle Steering Part 1", "\xF3\x0F\x11\x8B\xAC\x09\x00\x00\x73\x06\x41\x0F\x28\xCC\xEB\x08\x0F\x2F\xCA", "\x90\x90\x90\x90\x90\x90\x90\x90", "xxxx????x?xxxxx?xxx"),
+                new Memory.MemoryPatcher("Motorcycle Steering Part 2", "\xF3\x0F\x11\x8B\xAC\x09\x00\x00\xF3\x0F\x10\x4D\x7F\x41\x0F\x2F\xCC\x73\x06", "\x90\x90\x90\x90\x90\x90\x90\x90", "xxxx????xxxx?xxxxx?"),
+                new Memory.MemoryPatcher("Motorcycle Steering Part 3", "\xF3\x0F\x11\x83\xAC\x09\x00\x00\x73\x06\x41\x0F\x28\xF4\xEB\x10\xF3\x0F\x10", "\x90\x90\x90\x90\x90\x90\x90\x90", "xxxx????x?xxxxx?xxx"),
+                new Memory.MemoryPatcher("Motorcycle Steering Part 4", "\xF3\x0F\x11\xB3\xAC\x09\x00\x00\x8A\x88\xA6\x07\x00\x00\x84\xC9\x78\x15\x48", "\x90\x90\x90\x90\x90\x90\x90\x90", "xxxx????xx????xxx?x"),
+            });
+
+            vehiclePatchers.AddRange(new Memory.MemoryPatcher[]
+            {
+                new Memory.MemoryPatcher("Throttle 1", "\xF3\x0F\x11\xB3\xBC\x09\x00\x00\x89\xAB\xC0\x09\x00\x00\x8B\x83\xE8\x0B\x00\x00\x83\xE8\x06\x41\x3B\xC6", "\x90\x90\x90\x90\x90\x90\x90\x90", "xxxx????xx????xx????xxxxxx"), //During normal driving
+                new Memory.MemoryPatcher("Throttle 2", "\x89\xAB\xBC\x09\x00\x00\xE9\xE7\xFE\xFF\xFF\x48\x8B\xC4", "\x90\x90\x90\x90\x90\x90", "xx????x????xxx"), //During braking
+                new Memory.MemoryPatcher("Throttle 3", "\xF3\x44\x0F\x11\x8B\xBC\x09\x00\x00\xF3\x44\x0F\x11\x93\xC0\x09\x00\x00\xE9\x53\xFF\xFF\xFF\x41\x0F\x2F\xF8", "\x90\x90\x90\x90\x90\x90\x90\x90\x90", "xxxxx????xxxxx????x????xxxx"), //During burnout
                 
-                new Memory.CodeRemover("Brake 1", "\x89\xAB\xC0\x09\x00\x00\x8B\x83\xE8\x0B\x00\x00\x83\xE8\x06\x41\x3B\xC6\x77\x07", 6, "xx????xx????xxxxxxx?"), //During normal driving
-                new Memory.CodeRemover("Brake 2", "\xF3\x0F\x11\xB3\xC0\x09\x00\x00\x89\xAB\xBC\x09\x00\x00\xE9\xE7\xFE\xFF\xFF", 8, "xxxx????xx????x????"), //During braking
-                new Memory.CodeRemover("Brake 3", "\xF3\x44\x0F\x11\x93\xC0\x09\x00\x00\xE9\x53\xFF\xFF\xFF\x41\x0F\x2F\xF8\x72\x28", 9, "xxxxx????x????xxxxx?"), //During burnout
-            
-                new Memory.CodeRemover("Steering Center", "\x44\x89\xBB\xB4\x09\x00\x00\x8B\x0D\xC6\xF8\xE6\x00\x0F\x57\xC0\x81\xF9\xFF\xFF\x00\x00\x74\x60", 7, "xxx????xx????xxxxx????x?"),
-            };
-
-            codeReplacers = new[]
-            {
-                new Memory.CodeReplacer("Fuel", "\x0F\x83\xBD\x00\x00\x00\x44\x0F\x2F\xA1\x00\x09\x00\x00\xF3\x44\x0F\x5C\xD0", "\xE9\xBE\x00\x00\x00\x90", 6, "xxxxxxxxxx????xxxxx"), //Stops the car from jerking backwards and sparking at low fuel
-            };
-
-            foreach (Memory.CodeReplacer c in codeReplacers)
-            {
-                c.Apply();
-            }
-
-            steeringCodeRemovers = new[]
-            {
-                new Memory.CodeRemover("Steering Part 1", "\xF3\x0F\x11\x8B\xAC\x09\x00\x00\xF3\x0F\x10\x83\xB0\x09\x00\x00\xF3\x0F\x58\x83\xAC\x09\x00\x00", 8, "xxxx????xxxx????xxxx????", false), //Simultaneous
-                new Memory.CodeRemover("Steering Part 2", "\xF3\x0F\x11\x83\xAC\x09\x00\x00\x73\x06\x45\x0F\x28\xC4\xEB\x13\xF3\x44\x0F\x10\x05\x50\xE5", 8, "xxxx????x?xxxxx?xxxxx??", false), //Simultaneous
-                new Memory.CodeRemover("Steering Part 3", "\xF3\x44\x0F\x11\x83\xAC\x09\x00\x00\x4C\x8B\xCB\x45\x8A\xC6\x48\x8B\xD5\x49\x8B\xCF\xF3\x44", 9, "xxxxx????xxxxxxxxxxxxxx", false), //Simultaneous
-            
-                new Memory.CodeRemover("Motorcycle Steering Part 1", "\xF3\x0F\x11\x8B\xAC\x09\x00\x00\x73\x06\x41\x0F\x28\xCC\xEB\x08\x0F\x2F\xCA", 8, "xxxx????x?xxxxx?xxx", false),
-                new Memory.CodeRemover("Motorcycle Steering Part 2", "\xF3\x0F\x11\x8B\xAC\x09\x00\x00\xF3\x0F\x10\x4D\x7F\x41\x0F\x2F\xCC\x73\x06", 8, "xxxx????xxxx?xxxxx?", false),
-                new Memory.CodeRemover("Motorcycle Steering Part 3", "\xF3\x0F\x11\x83\xAC\x09\x00\x00\x73\x06\x41\x0F\x28\xF4\xEB\x10\xF3\x0F\x10", 8, "xxxx????x?xxxxx?xxx", false),
-                new Memory.CodeRemover("Motorcycle Steering Part 4", "\xF3\x0F\x11\xB3\xAC\x09\x00\x00\x8A\x88\xA6\x07\x00\x00\x84\xC9\x78\x15\x48", 8, "xxxx????xx????xxx?x", false),
-            };
-
-            for (int i = 0; i < codeRemovers.Length; i++)
-            {
-                codeRemovers[i].Apply();
-            }
+                new Memory.MemoryPatcher("Brake 1", "\x89\xAB\xC0\x09\x00\x00\x8B\x83\xE8\x0B\x00\x00\x83\xE8\x06\x41\x3B\xC6\x77\x07", "\x90\x90\x90\x90\x90\x90", "xx????xx????xxxxxxx?"), //During normal driving
+                new Memory.MemoryPatcher("Brake 2", "\xF3\x0F\x11\xB3\xC0\x09\x00\x00\x89\xAB\xBC\x09\x00\x00\xE9\xE7\xFE\xFF\xFF", "\x90\x90\x90\x90\x90\x90\x90\x90", "xxxx????xx????x????"), //During braking
+                new Memory.MemoryPatcher("Brake 3", "\xF3\x44\x0F\x11\x93\xC0\x09\x00\x00\xE9\x53\xFF\xFF\xFF\x41\x0F\x2F\xF8\x72\x28", "\x90\x90\x90\x90\x90\x90\x90\x90\x90", "xxxxx????x????xxxxx?"), //During burnout
+            });
 
             List<string> configLines = new List<string>();
             configLines.AddRange(File.ReadAllLines(Environment.CurrentDirectory + "/Scripts/SmoothDrivingV/Driving.ini"));
@@ -97,33 +86,37 @@ namespace SmoothDrivingV
 
             enableAdvancedGearbox = Config.ReadBool(configLines, "EnableAdvancedGearbox", true);
 
+            useManualGearbox = Config.ReadBool(configLines, "UseManualGearbox", false);
+
+            enableSmoothSteering = Config.ReadBool(configLines, "EnableSmoothSteering", true);
+
             if (enableAdvancedGearbox)
             {
-                gearboxCodeRemovers = new[]
+                vehiclePatchers.AddRange(new Memory.MemoryPatcher[]
                 {
-                    new Memory.CodeRemover("Clutch 1", "\xF3\x0F\x11\x43\x4C\x0F\xB7\x43\x04\x40\x84\xC5\x74\x14", 5, "xxxx?xxx?xxxx?"),
-                    new Memory.CodeRemover("Clutch 2", "\xC7\x43\x4C\xCD\xCC\xCC\x3D\xE9\xFF\x05\x00\x00\x44\x0F\x2F\xE7", 7, "xxx????x????xxxx"),
-                    new Memory.CodeRemover("Clutch 3", "\xF3\x0F\x11\x47\x4C\x48\x8B\x06\x44\x0F\x28\xC7\x48\x8B\xCE", 5, "xxxx?xxxxxxxxxx"),
-                    new Memory.CodeRemover("Clutch 4", "\xC7\x43\x4C\xCD\xCC\xCC\x3D\x44\x89\x6B\x6C\x44\x89\x73\x68", 7, "xxx????xxx?xxx?"),
-                    new Memory.CodeRemover("Clutch 5", "\xC7\x43\x4C\xCD\xCC\xCC\x3D\x66\x44\x89\x43\x04\x66\x89\x13\x44\x89\x73\x68\xEB\x0A", 7, "xx?????xxxx?xxxxxx?x?"), //Stops the RPM from dropping down to idle during low throttle + low-ish speed
-
-                    new Memory.CodeRemover("Upshift", "\x66\x89\x0B\x8D\x46\x04\x66\x89\x43\x04\x0F\xBE\x8F\x61\x0C\x00\x00", 3, "xxxxx?xxx?xxx????"),
-                    new Memory.CodeRemover("Downshift", "\x66\xFF\x0B\x66\x39\x33\x7E\x18\x48\x0F\xBF\x03\x41\x0F\x28\xC2", 3, "xxxxxxx?xxxxxxxx"),
-                    new Memory.CodeRemover("Downshift Jump", "\x72\xE0\x66\x44\x89\x4B\x04\xC7\x43\x4C\xCD\xCC\xCC\x3D\x44\x89\x73\x68\xE9\x85\x03\x00\x00", 2, "x?xxxx?xxx????xxx?x????"), //To prevent infinite loop on downshift
-                    new Memory.CodeRemover("Brake Downshift", "\x66\xFF\x0B\x66\x39\x33\x0F\x8E\xBC\x00\x00\x00\x48\x0F\xBF\x03", 3, "xxxxxxxx????xxxx"), //When braking hard
-                    new Memory.CodeRemover("Brake Downshift Jump", "\x72\xDC\xE9\x9F\x00\x00\x00\x41\x83\xF8\x0C\x0F\x84\xAA\x00\x00\x00", 2, "x?x????xxx?xx????"), //To prevent infinite loop on brake downshift
-                    new Memory.CodeRemover("Shift Reverse", "\x66\x44\x89\x2B\xC7\x43\x4C\xCD\xCC\xCC\x3D\xE9\x8F\x05\x00\x00", 4, "xxxxxx?????x????"),
-                    new Memory.CodeRemover("Shift Forward", "\x66\x89\x33\x44\x0F\x28\x74\x24\x30\x44\x0F\x28\x7C\x24\x20", 3, "xxxxxxxx?xxxxx?"),
-                    new Memory.CodeRemover("Shift Handbrake", "\x66\x89\x13\x44\x89\x73\x68\xEB\x0A\x44\x0F\x2E\xEF", 3, "xxxxxx?x?xxxx"), //Idk what this does but it seems to downshift upon pressing the handbrake
-                };
-
-                for (int i = 0; i < gearboxCodeRemovers.Length; i++)
-                {
-                    gearboxCodeRemovers[i].Apply();
-                }
+                    new Memory.MemoryPatcher("Clutch 1", "\xF3\x0F\x11\x43\x4C\x0F\xB7\x43\x04\x40\x84\xC5\x74\x14", "\x90\x90\x90\x90\x90", "xxxx?xxx?xxxx?"),
+                    new Memory.MemoryPatcher("Clutch 2", "\xC7\x43\x4C\xCD\xCC\xCC\x3D\xE9\xFF\x05\x00\x00\x44\x0F\x2F\xE7", "\x90\x90\x90\x90\x90\x90\x90", "xxx????x????xxxx"),
+                    new Memory.MemoryPatcher("Clutch 3", "\xF3\x0F\x11\x47\x4C\x48\x8B\x06\x44\x0F\x28\xC7\x48\x8B\xCE", "\x90\x90\x90\x90\x90", "xxxx?xxxxxxxxxx"),
+                    new Memory.MemoryPatcher("Clutch 4", "\xC7\x43\x4C\xCD\xCC\xCC\x3D\x44\x89\x6B\x6C\x44\x89\x73\x68", "\x90\x90\x90\x90\x90\x90\x90", "xxx????xxx?xxx?"),
+                    new Memory.MemoryPatcher("Clutch 5", "\xC7\x43\x4C\xCD\xCC\xCC\x3D\x66\x44\x89\x43\x04\x66\x89\x13\x44\x89\x73\x68\xEB\x0A", "\x90\x90\x90\x90\x90\x90\x90", "xx?????xxxx?xxxxxx?x?"), //Stops the RPM from dropping down to idle during low throttle + low-ish speed
+                
+                    new Memory.MemoryPatcher("Upshift", "\x66\x89\x0B\x8D\x46\x04\x66\x89\x43\x04\x0F\xBE\x8F\x61\x0C\x00\x00", "\x90\x90\x90", "xxxxx?xxx?xxx????"),
+                    new Memory.MemoryPatcher("Downshift", "\x66\xFF\x0B\x66\x39\x33\x7E\x18\x48\x0F\xBF\x03\x41\x0F\x28\xC2", "\x90\x90\x90", "xxxxxxx?xxxxxxxx"),
+                    new Memory.MemoryPatcher("Downshift Jump", "\x72\xE0\x66\x44\x89\x4B\x04\xC7\x43\x4C\xCD\xCC\xCC\x3D\x44\x89\x73\x68\xE9\x85\x03\x00\x00", "\x90\x90", "x?xxxx?xxx????xxx?x????"), //To prevent infinite loop on downshift
+                    new Memory.MemoryPatcher("Brake Downshift", "\x66\xFF\x0B\x66\x39\x33\x0F\x8E\xBC\x00\x00\x00\x48\x0F\xBF\x03", "\x90\x90\x90", "xxxxxxxx????xxxx"), //When braking hard
+                    new Memory.MemoryPatcher("Brake Downshift Jump", "\x72\xDC\xE9\x9F\x00\x00\x00\x41\x83\xF8\x0C\x0F\x84\xAA\x00\x00\x00", "\x90\x90", "x?x????xxx?xx????"), //To prevent infinite loop on brake downshift
+                    new Memory.MemoryPatcher("Shift Reverse", "\x66\x44\x89\x2B\xC7\x43\x4C\xCD\xCC\xCC\x3D\xE9\x8F\x05\x00\x00", "\x90\x90\x90\x90", "xxxxxx?????x????"),
+                    new Memory.MemoryPatcher("Shift Forward", "\x66\x89\x33\x44\x0F\x28\x74\x24\x30\x44\x0F\x28\x7C\x24\x20", "\x90\x90\x90", "xxxxxxxx?xxxxx?"),
+                    new Memory.MemoryPatcher("Shift Handbrake", "\x66\x89\x13\x44\x89\x73\x68\xEB\x0A\x44\x0F\x2E\xEF", "\x90\x90\x90", "xxxxxx?x?xxxx"), //Idk what this does but it seems to downshift upon pressing the handbrake
+                });
 
                 targetRPMFallRate = Config.ReadFloat(configLines, "TargetRPMFallRate", 0.15f);
                 targetRPMRiseRate = Config.ReadFloat(configLines, "TargetRPMRiseRate", 0.05f);
+            }
+
+            foreach (Memory.MemoryPatcher m in runtimePatchers)
+            {
+                m.Apply();
             }
 
             cruiseMinSpeed = Config.ReadFloat(configLines, "CruiseMinimumSpeed", 5.56f);
@@ -175,6 +168,13 @@ namespace SmoothDrivingV
             engineKey = (Keys)keysConverter.ConvertFromInvariantString(Config.ReadString(configLines, "EngineKey", "Z"));
             engineKeyModifier = (Keys)keysConverter.ConvertFromInvariantString(Config.ReadString(configLines, "EngineKeyModifier", "Shift"));
             enableEngineControl = engineKey != Keys.None;
+            enableKeyTurnAnimation = Config.ReadBool(configLines, "EnableKeyTurnAnimation", true);
+
+            downShiftKey = (Keys)keysConverter.ConvertFromInvariantString(Config.ReadString(configLines, "DownShiftKey", "3"));
+            downShiftKeyModifier = (Keys)keysConverter.ConvertFromInvariantString(Config.ReadString(configLines, "DownShiftKeyModifier", "None"));
+
+            upShiftKey = (Keys)keysConverter.ConvertFromInvariantString(Config.ReadString(configLines, "UpShiftKey", "4"));
+            upShiftKeyModifier = (Keys)keysConverter.ConvertFromInvariantString(Config.ReadString(configLines, "UpShiftKeyModifier", "None"));
 
             cruiseKey = (Keys)keysConverter.ConvertFromInvariantString(Config.ReadString(configLines, "CruiseControlKey", "T"));
             cruiseKeyModifier = (Keys)keysConverter.ConvertFromInvariantString(Config.ReadString(configLines, "CruiseControlKeyModifier", "Shift"));
@@ -214,28 +214,27 @@ namespace SmoothDrivingV
 
                 float driveMaxFlatVelocity = Config.ReadFloat(configLines, "DriveMaxFlatVelocity", -1.0f);
                 if (driveMaxFlatVelocity <= 0.0f) continue;
-                if (Config.ReadBool(configLines, "RedlineBufferCompensation", true)) driveMaxFlatVelocity /= 0.99f;
 
                 float[] gearRatios = Config.ReadStrings(configLines, "GearRatios", new string[] { "," }, new string[] { }).Select(x => float.Parse(x.Trim().Replace(',', '.'), System.Globalization.CultureInfo.InvariantCulture)).ToArray();
                 if (gearRatios == null || gearRatios.Length == 0) continue;
                 if (gearRatios[0] > 0.0f) gearRatios[0] = -gearRatios[0];
 
-                gearRatioConfigurations.Add(new GearRatioConfiguration(name, modelHashes, driveMaxFlatVelocity, gearRatios));
+                gearRatioConfigurations.Add(new GearRatioConfiguration(name, modelHashes, driveMaxFlatVelocity, Config.ReadFloat(configLines, "SpeedLimiter", 0.0f) / 3.6f, gearRatios));
             }
         }
 
         //General
         public Vehicle vehicle;
         private Vehicle previousVehicle;
-        private bool inVehicleLastFrame = false;
+        public static bool inVehicleLastFrame = false;
+        public static bool isElectric = false;
         private bool engineState = false;
         private bool enableEngineControl = true;
         private float previousRPM = 0.0f;
 
-        Memory.CodeRemover[] codeRemovers;
-        Memory.CodeReplacer[] codeReplacers;
-        Memory.CodeRemover[] gearboxCodeRemovers;
-        Memory.CodeRemover[] steeringCodeRemovers;
+        List<Memory.MemoryPatcher> runtimePatchers = new List<Memory.MemoryPatcher>(); //Active throughout entire script runtime
+        List<Memory.MemoryPatcher> steeringPatchers = new List<Memory.MemoryPatcher>(); //Active only during non-mouse steering
+        List<Memory.MemoryPatcher> vehiclePatchers = new List<Memory.MemoryPatcher>(); //Active only when in a vehicle
 
         //Controls
         private float doubleTapThreshold = 0.2f;
@@ -244,6 +243,17 @@ namespace SmoothDrivingV
         private Keys engineKeyModifier = Keys.Shift;
         private bool engineKeyDown = false;
         private bool engineKeyDownLastFrame = false;
+        private bool enableKeyTurnAnimation = true;
+
+        private Keys downShiftKey = Keys.D3;
+        private Keys downShiftKeyModifier = Keys.None;
+        private bool downShiftKeyDown = false;
+        private bool downShiftKeyDownLastFrame = false;
+
+        private Keys upShiftKey = Keys.D4;
+        private Keys upShiftKeyModifier = Keys.None;
+        private bool upShiftKeyDown = false;
+        private bool upShiftKeyDownLastFrame = false;
 
         private Keys cruiseKey = Keys.T;
         private Keys cruiseKeyModifier = Keys.Shift;
@@ -288,20 +298,22 @@ namespace SmoothDrivingV
         private bool hazardKeyDownLastFrame = false;
 
         private int indicatorState = 0; //0: Off, 1: Left, 2: Right, 3: Hazard
-        
+
         //Gearbox
-        private class GearRatioConfiguration
+        private struct GearRatioConfiguration
         {
             public string name;
             public int[] modelHashes;
             public float driveMaxFlatVelocity;
+            public float speedLimiter;
             public float[] gearRatios;
 
-            public GearRatioConfiguration(string name, int[] modelHashes, float driveMaxFlatVelocity, float[] gearRatios)
+            public GearRatioConfiguration(string name, int[] modelHashes, float driveMaxFlatVelocity, float speedLimiter, float[] gearRatios)
             {
                 this.name = name;
                 this.modelHashes = modelHashes;
                 this.driveMaxFlatVelocity = driveMaxFlatVelocity;
+                this.speedLimiter = speedLimiter;
                 this.gearRatios = gearRatios;
             }
         }
@@ -309,6 +321,8 @@ namespace SmoothDrivingV
         private List<GearRatioConfiguration> gearRatioConfigurations = new List<GearRatioConfiguration>();
 
         public static bool enableAdvancedGearbox = true;
+        public static bool useManualGearbox = true;
+        private bool hasGearboxConfig = false;
         private List<float> baseGearRatios;
         private float[] tempGearRatios;
 
@@ -327,6 +341,7 @@ namespace SmoothDrivingV
         private float downShiftDuration = 0.0f;
 
         private float driveMaxFlatVelocity = 0.0f;
+        public static float speedLimiter = 0.0f;
 
         private int topGear = 0;
         private int lastGear = 0;
@@ -338,9 +353,13 @@ namespace SmoothDrivingV
 
         //Fuel
         private bool enableFuelScript = true;
+        //private float fuelLevelLastFrame = 0.0f;
+        //private float averageRange = 0.0f;
         private float fuelTankVolume = 0.0f;
         private float fuelConsumptionModifier = 0.00038f;
         private float fuelPumpRate = 0.83333f;
+        private float jerryCanDrainTimer = 0.0f;
+        private float jerryCanDrainRate = 225.0f;
         private bool playedFuelFinishSound = false;
 
         private Model[] fuelPumpModels = new Model[]
@@ -366,7 +385,11 @@ namespace SmoothDrivingV
         private float velocityLastFrame = 0.0f;
         private float velocityAcceleration = 0.0f;
 
+        //private decimal odometer = 0.0m;
+
         //Steering
+        public bool enableSmoothSteering = true;
+
         private float steering = 0.0f;
         private float steeringSensitivity = 1.4f;
 
@@ -471,7 +494,7 @@ namespace SmoothDrivingV
                     vehicle.Model.IsCar
                     || vehicle.Model.IsBike
                     || vehicle.Model.IsQuadBike
-                    ) && playerPed.IsSittingInVehicle())
+                    ) && playerPed.IsSittingInVehicle() && !vehicle.Model.IsTank)
             {
                 engineState = vehicle.IsEngineRunning;
 
@@ -484,12 +507,19 @@ namespace SmoothDrivingV
                     previousVehicle = vehicle;
                     upShiftDuration = standardShiftDuration / vehicle.HandlingData.ClutchChangeRateScaleUpShift;
                     downShiftDuration = standardShiftDuration / vehicle.HandlingData.ClutchChangeRateScaleDownShift;
+                    isElectric = vehicle.Model.IsElectricVehicle;
+
+                    foreach (Memory.MemoryPatcher m in vehiclePatchers)
+                    {
+                        m.Apply();
+                    }
 
                     if (enableEngineControl)
                     {
                         Function.Call(Hash.SET_VEHICLE_ENGINE_ON, vehicle, engineState, true, true);
                     }
 
+                    hasGearboxConfig = false;
                     int modelHash = vehicle.Model.Hash;
 
                     foreach (GearRatioConfiguration g in gearRatioConfigurations)
@@ -498,6 +528,7 @@ namespace SmoothDrivingV
                         {
                             if (modelHash == g.modelHashes[h])
                             {
+                                speedLimiter = g.speedLimiter;
                                 vehicle.SetDriveMaxFlatVelocity(g.driveMaxFlatVelocity / 3.6f);
                                 vehicle.SetGearRatios(g.gearRatios);
                                 vehicle.HighGear = g.gearRatios.Length - 1;
@@ -524,9 +555,12 @@ namespace SmoothDrivingV
                                     Notification.Show(stringBuilder.ToString());
                                 }
 
+                                hasGearboxConfig = true;
                                 break;
                             }
                         }
+
+                        if (hasGearboxConfig) break;
                     }
 
                     if (enableFuelScript)
@@ -534,12 +568,13 @@ namespace SmoothDrivingV
                         fuelTankVolume = vehicle.HandlingData.PetrolTankVolume;
                         playedFuelFinishSound = false;
                     }
+                    if (!hasGearboxConfig) speedLimiter = 0.0f;
 
                     baseGearRatios = vehicle.GetGearRatios();
                     topGear = vehicle.HighGear;
                     indicatorState = (int)(vehicle.GetLightStates() >> 8) & 3;
                 }
-                
+
                 if (enableEngineControl)
                 {
                     if (engineKeyDown && !engineKeyDownLastFrame)
@@ -548,6 +583,7 @@ namespace SmoothDrivingV
                         {
                             Function.Call(Hash.SET_VEHICLE_ENGINE_ON, vehicle, !engineState, false, true);
                             engineState = vehicle.IsEngineRunning;
+                            if (enableKeyTurnAnimation) playerPed.Task.PlayAnimation("oddjobs@towing", "start_engine", 5.0f, 5.0f, 800, AnimationFlags.None, 0.35f);
                         }
                         if (!engineState)
                         {
@@ -611,14 +647,14 @@ namespace SmoothDrivingV
 
                 float currentRPM = vehicle.CurrentRPM;
                 float deltaRPM = (currentRPM - previousRPM) / Time.deltaTime;
-                //float timeToRedline = deltaRPM > 0.0f ? (1.0f - currentRPM) / deltaRPM : -1.0f;
                 previousRPM = currentRPM;
 
                 float fuelLevel = vehicle.FuelLevel;
-                //GTA.UI.Screen.ShowSubtitle("Time to Redline: " + timeToRedline.ToString("0.00") + " s");
+                //float deltaFuel = (fuelLevel - fuelLevelLastFrame) / Time.deltaTime;
+                //fuelLevelLastFrame = fuelLevel;
                 bool accelerateKeyJustPressed = Game.IsControlJustPressed(GTA.Control.VehicleAccelerate);
                 bool brakeKeyJustPressed = Game.IsControlJustPressed(GTA.Control.VehicleBrake);
-                float torqueMultiplier = burnout ? 1.0f : MathExt.Clamp(100.0f * (1.0f - currentRPM), 0.0f, 1.0f);
+                float torqueMultiplier = (isElectric || burnout) ? 1.0f : MathExt.Clamp(100.0f * (1.0f - currentRPM), 0.0f, 1.0f);
 
                 int wheelCount = vehicle.GetWheelCount();
                 int poweredWheelCount = 0;
@@ -691,7 +727,28 @@ namespace SmoothDrivingV
                 {
                     averageForwardSteerWheelSpeed /= steeredWheelCount;
                 }
+                /*
+                odometer += (decimal)averageWheelSpeed * (decimal)Time.deltaTime; 
 
+                float timeToDepletion = deltaFuel < 0.0f ? fuelLevel / (-deltaFuel) : 0.0f;
+                float fuelRange = timeToDepletion * averageWheelSpeed * 0.001f;
+                averageRange += (fuelRange - averageRange) * 0.01f;
+                StringBuilder rangeInfo = new StringBuilder();
+
+                rangeInfo.Append("Range: ");
+                rangeInfo.Append(fuelRange.ToString("0"));
+                rangeInfo.Append(" km");
+
+                rangeInfo.Append("\nAverage Range: ");
+                rangeInfo.Append(averageRange.ToString("0"));
+                rangeInfo.Append(" km");
+
+                rangeInfo.Append("\nOdometer: ");
+                rangeInfo.Append(((float)odometer * 0.001f).ToString("0.000"));
+                rangeInfo.Append(" km");
+
+                GTA.UI.Screen.ShowSubtitle(rangeInfo.ToString());
+                */
                 forwardSpeed = vehicle.GetForwardSpeed();
                 forwardAcceleration = (forwardSpeed - forwardSpeedLastFrame) / Time.deltaTime;
                 forwardSpeedLastFrame = forwardSpeed;
@@ -1006,7 +1063,7 @@ namespace SmoothDrivingV
                         }
                     }
 
-                    if (enableAdvancedGearbox)
+                    if (!isElectric && enableAdvancedGearbox)
                     {
                         if (currentGear < 1)
                         {
@@ -1017,104 +1074,141 @@ namespace SmoothDrivingV
                             currentGear = topGear;
                         }
 
-                        int targetGear = 1;
-                        float trThrottle = MathExt.Clamp((throttle - 0.2f) / 0.6f, 0.0f, 1.0f);
-
-                        if (brakeKey)
+                        if (useManualGearbox)
                         {
-                            targetRPM += MathExt.Clamp(0.4f - targetRPM, -targetRPMFallRate * (1.0f + brake) * Time.deltaTime, 0.0f);
-                            decelUpShiftTimer = 5.0f;
-                            decelMode = false;
-                        }
-                        else if (throttle == 0.0f)
-                        {
-                            if (targetRPM >= 0.6f)
+                            if (downShiftKeyDown && !downShiftKeyDownLastFrame)
                             {
-                                targetRPM = 0.6f;
+                                if (currentGear > 1)
+                                {
+                                    lastGear = currentGear;
+                                    currentGear--;
+                                    shifting = true;
+                                }
 
-                                if (decelUpShiftTimer < 5.0f)
-                                {
-                                    decelMode = true;
-                                    decelUpShiftTimer += Time.deltaTime;
-                                }
-                                else
-                                {
-                                    decelMode = false;
-                                }
+                                downShiftKeyDownLastFrame = true;
                             }
-                            else
+                            else if (!downShiftKeyDown)
                             {
-                                targetRPM = 0.4f;
-                                decelUpShiftTimer = 5.0f;
-                                decelMode = false;
+                                downShiftKeyDownLastFrame = false;
                             }
-                        }
-                        else if (trThrottle < 1.0f)
-                        {
-                            targetRPM += MathExt.Clamp(0.4f + trThrottle * trThrottle * 0.6f - targetRPM, -targetRPMFallRate * Time.deltaTime * (1.0f - trThrottle), targetRPMRiseRate * Time.deltaTime * trThrottle);
-                            decelUpShiftTimer = 5.0f;
-                            decelMode = false;
+
+                            if (upShiftKeyDown && !upShiftKeyDownLastFrame)
+                            {
+                                if (currentGear < topGear)
+                                {
+                                    lastGear = currentGear;
+                                    currentGear++;
+                                    shifting = true;
+                                }
+
+                                upShiftKeyDownLastFrame = true;
+                            }
+                            else if (!upShiftKeyDown)
+                            {
+                                upShiftKeyDownLastFrame = false;
+                            }
                         }
                         else
                         {
-                            targetRPM = 0.99f;
-                            decelUpShiftTimer = 0.0f;
-                            decelMode = false;
-                        }
+                            int targetGear = 1;
+                            float trThrottle = MathExt.Clamp((throttle - 0.2f) / 0.6f, 0.0f, 1.0f);
 
-                        if (averageForwardDriveWheelSpeed > 0.1f)
-                        {
-                            float targetGearRatio = targetRPM * driveMaxFlatVelocity / averageForwardDriveWheelSpeed;
-
-                            for (; targetGear < topGear; targetGear++)
+                            if (brakeKey)
                             {
-                                if (baseGearRatios[targetGear] <= targetGearRatio)
+                                targetRPM += MathExt.Clamp(0.4f - targetRPM, -targetRPMFallRate * (1.0f + brake) * Time.deltaTime, 0.0f);
+                                decelUpShiftTimer = 5.0f;
+                                decelMode = false;
+                            }
+                            else if (throttle == 0.0f)
+                            {
+                                if (targetRPM >= 0.6f)
                                 {
-                                    if (targetGear < currentGear)
-                                    {
-                                        float gearRatio = baseGearRatios[targetGear];
-                                        float gearRPM = averageForwardDriveWheelSpeed / (driveMaxFlatVelocity / gearRatio);
-                                        float gearRatioRatio = baseGearRatios[currentGear] / gearRatio;
-                                        float gearTimeToRedline = deltaRPM > 0.0f ? (1.0f - gearRPM) / (deltaRPM * gearRatioRatio) : -1.0f;
+                                    targetRPM = 0.6f;
 
-                                        if (gearRPM < 0.8f && (gearTimeToRedline >= 1.5f || gearTimeToRedline == -1.0f))
+                                    if (decelUpShiftTimer < 5.0f)
+                                    {
+                                        decelMode = true;
+                                        decelUpShiftTimer += Time.deltaTime;
+                                    }
+                                    else
+                                    {
+                                        decelMode = false;
+                                    }
+                                }
+                                else
+                                {
+                                    targetRPM = 0.4f;
+                                    decelUpShiftTimer = 5.0f;
+                                    decelMode = false;
+                                }
+                            }
+                            else if (trThrottle < 1.0f)
+                            {
+                                targetRPM += MathExt.Clamp(0.4f + trThrottle * trThrottle * 0.6f - targetRPM, -targetRPMFallRate * Time.deltaTime * (1.0f - trThrottle), targetRPMRiseRate * Time.deltaTime * trThrottle);
+                                decelUpShiftTimer = 5.0f;
+                                decelMode = false;
+                            }
+                            else
+                            {
+                                targetRPM = 0.99f;
+                                decelUpShiftTimer = 0.0f;
+                                decelMode = false;
+                            }
+
+                            if (averageForwardDriveWheelSpeed > 0.1f)
+                            {
+                                float targetGearRatio = targetRPM * driveMaxFlatVelocity / averageForwardDriveWheelSpeed;
+
+                                for (; targetGear < topGear; targetGear++)
+                                {
+                                    if (baseGearRatios[targetGear] <= targetGearRatio)
+                                    {
+                                        if (targetGear < currentGear)
+                                        {
+                                            float gearRatio = baseGearRatios[targetGear];
+                                            float gearRPM = averageForwardDriveWheelSpeed / (driveMaxFlatVelocity / gearRatio);
+                                            float gearRatioRatio = baseGearRatios[currentGear] / gearRatio;
+                                            float gearTimeToRedline = deltaRPM > 0.0f ? (1.0f - gearRPM) / (deltaRPM * gearRatioRatio) : -1.0f;
+
+                                            if (gearRPM < 0.8f && (gearTimeToRedline >= 1.5f || gearTimeToRedline == -1.0f))
+                                            {
+                                                break;
+                                            }
+                                        }
+                                        else
                                         {
                                             break;
                                         }
                                     }
-                                    else
-                                    {
-                                        break;
-                                    }
                                 }
                             }
-                        }
-                        //GTA.UI.Screen.ShowSubtitle(currentRPM.ToString("0.00") + (deltaRPM >= 0.0f ? " + " : " - ") + deltaRPM.ToString("0.00000").TrimStart('-'));
+                            //GTA.UI.Screen.ShowSubtitle(currentRPM.ToString("0.00") + (deltaRPM >= 0.0f ? " + " : " - ") + deltaRPM.ToString("0.00000").TrimStart('-'));
 
-                        if (!shifting && currentGear != targetGear)
-                        {
-                            shiftWaitTimer += Time.deltaTime;
-
-                            if
-                            (
-                                (shiftWaitTimer >= shiftDelay ||
-                                currentRPM < 0.3f ||
-                                ((currentRPM >= 0.9f && deltaRPM < 0.01f) || currentRPM > 0.99f) ||
-                                (targetGear < currentGear && throttle >= 0.9f)) &&
-                                (!decelMode || targetGear < currentGear)
-                            )
+                            if (!shifting && currentGear != targetGear)
                             {
-                                lastGear = currentGear;
-                                currentGear = targetGear;
-                                shiftWaitTimer = 0.0f;
-                                shifting = true;
-                                shiftTimer = 0.0f;
-                                throttleChangeTimer = 0.0f;
+                                shiftWaitTimer += Time.deltaTime;
+
+                                if
+                                (
+                                    (shiftWaitTimer >= shiftDelay ||
+                                    currentRPM < 0.3f ||
+                                    ((currentRPM >= 0.9f && deltaRPM < 0.01f) || currentRPM > 0.99f) ||
+                                    (targetGear < currentGear && throttle >= 0.9f)) &&
+                                    (!decelMode || targetGear < currentGear)
+                                )
+                                {
+                                    lastGear = currentGear;
+                                    currentGear = targetGear;
+                                    shiftWaitTimer = 0.0f;
+                                    shifting = true;
+                                    shiftTimer = 0.0f;
+                                    throttleChangeTimer = 0.0f;
+                                }
                             }
-                        }
-                        else if (shiftWaitTimer > 0.0f)
-                        {
-                            shiftWaitTimer = 0.0f;
+                            else if (shiftWaitTimer > 0.0f)
+                            {
+                                shiftWaitTimer = 0.0f;
+                            }
                         }
 
                         if (shifting)
@@ -1138,6 +1232,8 @@ namespace SmoothDrivingV
 
                         vehicle.Clutch = 1.0f;
                     }
+
+                    if (speedLimiter > 0.0f && averageWheelSpeed > speedLimiter) throttle = MathExt.Clamp(throttle - 4.0f * (averageForwardDriveWheelSpeed - speedLimiter), 0.0f, 1.0f);
 
                     if (enableTractionControl)
                     {
@@ -1202,7 +1298,7 @@ namespace SmoothDrivingV
                         brake = MathExt.Clamp(brake - Time.deltaTime * 15.0f, 0.0f, 1.0f);
                     }
 
-                    if (enableAdvancedGearbox)
+                    if (!isElectric && enableAdvancedGearbox)
                     {
                         vehicle.Clutch = 1.0f;
 
@@ -1274,88 +1370,85 @@ namespace SmoothDrivingV
                         }
                     }
 
-                    torqueMultiplier *= 0.0f;
+                    torqueMultiplier = 0.0f;
                 }
 
-                if (enableAdvancedGearbox)
+                if (enableAdvancedGearbox && vehicle.CurrentGear != currentGear)
                 {
-                    if (vehicle.CurrentGear != currentGear)
-                    {
-                        vehicle.NextGear = currentGear;
-                        vehicle.CurrentGear = currentGear;
-                    }
+                    vehicle.NextGear = currentGear;
+                    vehicle.CurrentGear = currentGear;
                 }
 
                 vehicle.EngineTorqueMultiplier = torqueMultiplier;
                 vehicle.BrakePower = burnout ? 1.0f : brake;
 
-                if (Game.IsControlPressed(GTA.Control.VehicleMouseControlOverride))
+                if (enableSmoothSteering)
                 {
-                    for (int i = 0; i < steeringCodeRemovers.Length; i++)
+                    if (Game.IsControlPressed(GTA.Control.VehicleMouseControlOverride))
                     {
-                        if (steeringCodeRemovers[i].applied)
-                        {
-                            steeringCodeRemovers[i].Revert();
-                        }
-                    }
+                        if (steeringPatchers[0].Status > 1)
+                            foreach (Memory.MemoryPatcher m in steeringPatchers)
+                            {
+                                m.Revert();
+                            }
 
-                    steering = vehicle.SteeringScale;
-                    steeringInput = 0.0f;
-                }
-                else
-                {
-                    for (int i = 0; i < steeringCodeRemovers.Length; i++)
-                    {
-                        if (!steeringCodeRemovers[i].applied)
-                        {
-                            steeringCodeRemovers[i].Apply();
-                        }
-                    }
-
-                    bool left = Game.IsControlPressed(GTA.Control.VehicleMoveLeftOnly);
-                    bool right = Game.IsControlPressed(GTA.Control.VehicleMoveRightOnly);
-                    float speedCompensation = 1.0f + steeringSpeedCompensation * MathExt.Abs(averageForwardSteerWheelSpeed);
-
-                    if (left && !right)
-                    {
-                        if (steeringInput < 0.0f) steeringInput = -steeringInput;
-                        steeringInput = Math.Min(1.0f, steeringInput + speedCompensation * Time.deltaTime * steeringInputRise);
-                    }
-                    else if (!left && right)
-                    {
-                        if (steeringInput > 0.0f) steeringInput = -steeringInput;
-                        steeringInput = Math.Max(-1.0f, steeringInput - speedCompensation * Time.deltaTime * steeringInputRise);
+                        steering = vehicle.SteeringScale;
+                        steeringInput = 0.0f;
                     }
                     else
                     {
-                        float inc = speedCompensation * Time.deltaTime * steeringInputFall;
+                        if (steeringPatchers[0].Status < 2)
+                            foreach (Memory.MemoryPatcher m in steeringPatchers)
+                            {
+                                m.Apply();
+                            }
 
-                        if (steeringInput > inc)
+                        bool left = Game.IsControlPressed(GTA.Control.VehicleMoveLeftOnly);
+                        bool right = Game.IsControlPressed(GTA.Control.VehicleMoveRightOnly);
+                        float speedCompensation = 1.0f + steeringSpeedCompensation * MathExt.Abs(averageForwardSteerWheelSpeed);
+
+                        if (left && !right)
                         {
-                            steeringInput = Math.Max(0.0f, steeringInput - inc);
+                            if (steeringInput < 0.0f) steeringInput = -steeringInput;
+                            steeringInput = Math.Min(1.0f, steeringInput + speedCompensation * Time.deltaTime * steeringInputRise);
                         }
-                        else if (steeringInput < inc)
+                        else if (!left && right)
                         {
-                            steeringInput = Math.Min(0.0f, steeringInput + inc);
+                            if (steeringInput > 0.0f) steeringInput = -steeringInput;
+                            steeringInput = Math.Max(-1.0f, steeringInput - speedCompensation * Time.deltaTime * steeringInputRise);
                         }
                         else
                         {
-                            steeringInput = 0.0f;
+                            float inc = speedCompensation * Time.deltaTime * steeringInputFall;
+
+                            if (steeringInput > inc)
+                            {
+                                steeringInput = Math.Max(0.0f, steeringInput - inc);
+                            }
+                            else if (steeringInput < inc)
+                            {
+                                steeringInput = Math.Min(0.0f, steeringInput + inc);
+                            }
+                            else
+                            {
+                                steeringInput = 0.0f;
+                            }
                         }
+
+                        float absSteeringInput = MathExt.Abs(steeringInput);
+                        if (absSteeringInput < 0.01f) steeringInput = 0.0f;
+                        steering = MathExt.Clamp(steering + Time.deltaTime * steeringSensitivity * steeringInput * speedCompensation, -1.0f, 1.0f);
+
+                        if (absSteeringInput < 0.95f)
+                        {
+                            float steeringCenterMultiplier = (1.0f - absSteeringInput) * MathExt.Clamp(1.0f - (float)Math.Pow(1.0f / (steeringCentering * averageForwardSteerWheelSpeed * averageForwardSteerWheelSpeed + 1.0f), Time.deltaTime), 0.0f, 1.0f);
+                            steering += (0.0f - steering) * steeringCenterMultiplier;
+                        }
+
+                        vehicle.SteeringScale += (steering - vehicle.SteeringScale) * MathExt.Clamp(1.0f - (float)Math.Pow(steeringInputSmoothing, Time.deltaTime), 0.0f, 1.0f);
                     }
-
-                    float absSteeringInput = MathExt.Abs(steeringInput);
-                    if (absSteeringInput < 0.01f) steeringInput = 0.0f;
-                    steering = MathExt.Clamp(steering + Time.deltaTime * steeringSensitivity * steeringInput * speedCompensation, -1.0f, 1.0f);
-
-                    if (absSteeringInput < 0.95f)
-                    {
-                        float steeringCenterMultiplier = (1.0f - absSteeringInput) * MathExt.Clamp(1.0f - (float)Math.Pow(1.0f / (steeringCentering * averageForwardSteerWheelSpeed * averageForwardSteerWheelSpeed + 1.0f), Time.deltaTime), 0.0f, 1.0f);
-                        steering += (0.0f - steering) * steeringCenterMultiplier;
-                    }
-
-                    vehicle.SteeringScale += (steering - vehicle.SteeringScale) * MathExt.Clamp(1.0f - (float)Math.Pow(steeringInputSmoothing, Time.deltaTime), 0.0f, 1.0f);
                 }
+                else steering = vehicle.SteeringScale;
 
                 if ((indicatorState == 1 && steering >= indicatorCutoffArmThreshold && !armIndicatorCutoff) || (indicatorState == 2 && -steering >= indicatorCutoffArmThreshold))
                 {
@@ -1375,7 +1468,7 @@ namespace SmoothDrivingV
                 {
                     float fuelThrottle = currentRPM > 0.2f ? vehicle.ThrottlePower : 0.1f;
                     float fuelConsumption = fuelConsumptionModifier * fuelThrottle * currentRPM * torqueMultiplier * MathExt.Clamp(1.7f - currentRPM, 0.0f, 1.0f);
-                    
+
                     if (fuelConsumption > 0.0f)
                     {
                         for (int i = 0; i < 100; i++) //To prevent the fuel consumption rate from being too small to transcend 32-bit float precision
@@ -1398,7 +1491,7 @@ namespace SmoothDrivingV
                     float displayRPM = MathExt.Clamp(currentRPM / 0.99f, 0.2f, 1.0f);
                     bool headlights = vehicle.AreLightsOn;
                     bool highbeams = vehicle.AreHighBeamsOn;
-                    UI.Update(engineState, displaySpeed, cruiseControlActive, raceModeActive, cruiseSpeed, displayRPM, enableFuelScript ? (vehicle.FuelLevel / fuelTankVolume) : 1.0f, currentGear, indicatorState, vehicle.GetIndicatorFlash(), headlights, highbeams);
+                    UI.Update(engineState, displaySpeed, cruiseControlActive, raceModeActive, cruiseSpeed, displayRPM, enableFuelScript ? (vehicle.FuelLevel / fuelTankVolume) : 1.0f, vehicle.CurrentGear, indicatorState, vehicle.GetIndicatorFlash(), headlights, highbeams);
                 }
 
                 inVehicleLastFrame = true;
@@ -1420,16 +1513,31 @@ namespace SmoothDrivingV
                         Function.Call(Hash.SET_VEHICLE_ENGINE_ON, previousVehicle, engineState, true, true);
                     }
 
+                    foreach (Memory.MemoryPatcher m in vehiclePatchers)
+                    {
+                        m.Revert();
+                    }
+
+                    foreach (Memory.MemoryPatcher m in steeringPatchers)
+                    {
+                        m.Revert();
+                    }
+
                     engineState = false;
                     indicatorState = 0;
                     raceModeActive = false;
                     inVehicleLastFrame = false;
+                    jerryCanDrainTimer = 0.0f;
                     UI.Reset();
                 }
 
                 if (enableFuelScript && previousVehicle != null && previousVehicle.Exists())
                 {
-                    if (World.GetNearbyProps(playerPed.Position, 3.0f, fuelPumpModels).Length > 0 && playerPed.Position.DistanceTo(previousVehicle.Position) < 5.0f)
+                    Weapon current = playerPed.Weapons.Current;
+                    bool fuelPump = World.GetNearbyProps(playerPed.Position, 3.0f, fuelPumpModels).Length > 0;
+                    bool jerryCan = !fuelPump && (playerPed.Weapons.Current.Hash == WeaponHash.PetrolCan);
+
+                    if ((fuelPump || jerryCan) && playerPed.Position.DistanceTo(previousVehicle.Position) < 5.0f)
                     {
                         fuelTankVolume = previousVehicle.HandlingData.PetrolTankVolume;
                         float fuelLevel = previousVehicle.FuelLevel / fuelTankVolume;
@@ -1438,6 +1546,10 @@ namespace SmoothDrivingV
                         {
                             GTA.UI.Screen.ShowSubtitle("~r~Cannot refuel - engine running!", 50);
                         }
+                        else if (jerryCan && current.AmmoInClip <= 0)
+                        {
+                            GTA.UI.Screen.ShowSubtitle("~r~Cannot refuel - jerry can empty!", 50);
+                        }
                         else if (fuelLevel < 1.0f)
                         {
                             Game.DisableControlThisFrame(GTA.Control.Pickup);
@@ -1445,6 +1557,16 @@ namespace SmoothDrivingV
 
                             if (Game.IsControlPressed(GTA.Control.Pickup))
                             {
+                                if (jerryCan)
+                                {
+                                    jerryCanDrainTimer += Time.deltaTime * jerryCanDrainRate * fuelPumpRate;
+                                    if (jerryCanDrainTimer > 1)
+                                    {
+                                        current.AmmoInClip -= (int)(jerryCanDrainTimer % current.MaxAmmoInClip + 0.5f);
+                                        jerryCanDrainTimer = 0.0f;
+                                    }
+                                }
+
                                 previousVehicle.FuelLevel = MathExt.Clamp(previousVehicle.FuelLevel + Time.deltaTime * fuelPumpRate, 0.0f, fuelTankVolume);
                                 playedFuelFinishSound = false;
                             }
@@ -1454,7 +1576,7 @@ namespace SmoothDrivingV
                         else
                         {
                             GTA.UI.Screen.ShowSubtitle("~g~Fuel Level: " + fuelLevel.ToString("0.00%") + " (" + previousVehicle.FuelLevel.ToString("0.0") + "/" + fuelTankVolume.ToString("0.0") + " L)", 50);
-                            
+
                             if (!playedFuelFinishSound)
                             {
                                 Audio.PlaySoundFrontend("Hack_Success", "DLC_HEIST_BIOLAB_PREP_HACKING_SOUNDS");
@@ -1508,6 +1630,14 @@ namespace SmoothDrivingV
             {
                 directionSwitchKeyDown = true;
             }
+            if (keyEventArgs.KeyCode == downShiftKey && (downShiftKeyModifier == Keys.None || keyEventArgs.Modifiers == downShiftKeyModifier))
+            {
+                downShiftKeyDown = true;
+            }
+            if (keyEventArgs.KeyCode == upShiftKey && (upShiftKeyModifier == Keys.None || keyEventArgs.Modifiers == upShiftKeyModifier))
+            {
+                upShiftKeyDown = true;
+            }
         }
 
         private void OnKeyUp(object sender, KeyEventArgs keyEventArgs)
@@ -1552,28 +1682,31 @@ namespace SmoothDrivingV
             {
                 directionSwitchKeyDown = false;
             }
+            if (keyEventArgs.KeyCode == downShiftKey)
+            {
+                downShiftKeyDown = false;
+            }
+            if (keyEventArgs.KeyCode == upShiftKey)
+            {
+                upShiftKeyDown = false;
+            }
         }
 
         private void OnAbort(object sender, EventArgs eventArgs)
         {
-            for (int i = 0; i < codeRemovers.Length; i++)
+            foreach (Memory.MemoryPatcher m in runtimePatchers)
             {
-                codeRemovers[i].Revert();
+                m.Revert();
             }
 
-            foreach (Memory.CodeReplacer c in codeReplacers)
+            foreach (Memory.MemoryPatcher m in steeringPatchers)
             {
-                c.Revert();
+                m.Revert();
             }
 
-            for (int i = 0; i < gearboxCodeRemovers.Length; i++)
+            foreach (Memory.MemoryPatcher m in vehiclePatchers)
             {
-                gearboxCodeRemovers[i].Revert();
-            }
-
-            for (int i = 0; i < steeringCodeRemovers.Length; i++)
-            {
-                steeringCodeRemovers[i].Revert();
+                m.Revert();
             }
         }
     }
